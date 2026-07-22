@@ -1,0 +1,252 @@
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+/* ============================================================
+   CodeInsight AI — Design System
+   A premium, IDE-grade dark theme. Inspired by the restraint of
+   Linear, the depth of Arc, the density control of n8n, and the
+   material precision of Apple + Raycast. One accent, used sparingly.
+   ============================================================ */
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+
+  /* ---------- Surfaces (near-black, layered by elevation) ---------- */
+  --color-canvas: #08090a;        /* app background, the deepest layer */
+  --color-surface: #0d0e10;       /* sidebar / panel base */
+  --color-surface-raised: #131417; /* topbar, cards */
+  --color-surface-elevated: #1a1b1f; /* hover states, popovers */
+  --color-surface-overlay: #202126;  /* active/pressed states */
+
+  /* ---------- Borders ---------- */
+  --color-border-subtle: #1c1d21;
+  --color-border: #26272c;
+  --color-border-strong: #35363c;
+
+  /* ---------- Text ---------- */
+  --color-text-primary: #f2f3f5;
+  --color-text-secondary: #9a9ba3;
+  --color-text-tertiary: #66676f;
+  --color-text-disabled: #48494f;
+
+  /* ---------- Accent: Emerald ---------- */
+  --color-accent: #22c55e;
+  --color-accent-hover: #2fd66d;
+  --color-accent-active: #16a34a;
+  --color-accent-subtle: #12321f;   /* accent wash on dark surface */
+  --color-accent-subtle-border: #1f5c38;
+  --color-accent-text: #4ade80;
+
+  /* ---------- Semantic (kept muted, IDE-like) ---------- */
+  --color-danger: #f0473f;
+  --color-warning: #e8a23d;
+  --color-info: #4d9fec;
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+
+  /* ---------- Type scale ----------
+     Compact, IDE-appropriate scale — most UI text sits at 13px,
+     the density of a professional tool rather than a marketing page. */
+  --text-micro: 0.6875rem;   /* 11px — tags, timestamps */
+  --text-micro--line-height: 1rem;
+  --text-caption: 0.75rem;   /* 12px — labels, meta */
+  --text-caption--line-height: 1rem;
+  --text-body-sm: 0.8125rem; /* 13px — default UI text */
+  --text-body-sm--line-height: 1.25rem;
+  --text-body: 0.875rem;     /* 14px — comfortable reading */
+  --text-body--line-height: 1.4rem;
+  --text-title-sm: 1rem;     /* 16px — card/section titles */
+  --text-title-sm--line-height: 1.5rem;
+  --text-title: 1.25rem;     /* 20px — panel titles */
+  --text-title--line-height: 1.75rem;
+  --text-heading: 1.625rem;  /* 26px — page titles */
+  --text-heading--line-height: 2rem;
+
+  /* ---------- Shadows (soft, low-opacity, dark-native) ---------- */
+  --shadow-panel: 0 1px 0 0 rgba(255, 255, 255, 0.02) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-popover: 0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-glow-accent: 0 0 0 1px rgba(34, 197, 94, 0.25), 0 0 16px -4px rgba(34, 197, 94, 0.35);
+
+  /* ---------- Motion ---------- */
+  --ease-out-swift: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 280ms;
+}
+
+/* ---------------------------------------------------------------
+   Light theme override
+   CodeInsight AI is designed dark-first; light mode is offered for
+   accessibility/preference but keeps the same restrained, IDE tone.
+--------------------------------------------------------------- */
+.light {
+  --color-canvas: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-elevated: #f1f1f3;
+  --color-surface-overlay: #e8e8eb;
+
+  --color-border-subtle: #ececef;
+  --color-border: #e2e2e6;
+  --color-border-strong: #cfcfd5;
+
+  --color-text-primary: #17181a;
+  --color-text-secondary: #55565d;
+  --color-text-tertiary: #86878e;
+  --color-text-disabled: #b8b9be;
+
+  --color-accent-subtle: #e7f8ed;
+  --color-accent-subtle-border: #b9ecc9;
+}
+
+/* ---------------------------------------------------------------
+   Base layer
+--------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01", "cv02", "cv03";
+  }
+
+  ::selection {
+    background-color: var(--color-accent-subtle-border);
+    color: var(--color-text-primary);
+  }
+
+  /* Scrollbars — thin, unobtrusive, IDE-style */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-strong);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-text-tertiary);
+    background-clip: padding-box;
+  }
+
+  /* Visible keyboard focus — accessible, on-brand */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------
+   Shared utility classes for the design system
+--------------------------------------------------------------- */
+@layer components {
+  .text-heading {
+    font-size: var(--text-heading);
+    line-height: var(--text-heading--line-height);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .text-title {
+    font-size: var(--text-title);
+    line-height: var(--text-title--line-height);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .text-title-sm {
+    font-size: var(--text-title-sm);
+    line-height: var(--text-title-sm--line-height);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .text-body {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+  .text-body-sm {
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm--line-height);
+  }
+  .text-caption {
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+  .text-micro {
+    font-size: var(--text-micro);
+    line-height: var(--text-micro--line-height);
+    letter-spacing: 0.02em;
+  }
+
+  .panel {
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.3rem;
+    border-radius: var(--radius-xs);
+    background-color: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-tertiary);
+    font-size: var(--text-micro);
+    font-family: var(--font-sans);
+  }
+}
+
+/* Custom Monaco Gutter Pointer Arrows (PythonTutor Style) */
+.next-exec-line-glyph {
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d01257'><path d='M8 5v14l11-7z'/></svg>") no-repeat center center !important;
+  background-size: 14px 14px !important;
+}
+
+.prev-exec-line-glyph {
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2334D399'><path d='M8 5v14l11-7z'/></svg>") no-repeat center center !important;
+  background-size: 14px 14px !important;
+}

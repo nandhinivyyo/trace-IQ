@@ -8,6 +8,7 @@ import {
   generateTrace,
   parseInputRequirements,
   isInputLine,
+  completeProgram,
 } from "@/services/execution-service";
 
 import { InputDialog } from "@/components/ui/input-dialog";
@@ -23,6 +24,7 @@ import {
   Copy,
   Download,
   AlignLeft,
+  Sparkles,
 } from "lucide-react";
 import { usePlayback } from "@/services/playback-store";
 import { ExecutionTimeline } from "./execution-timeline";
@@ -208,6 +210,8 @@ export default function MonacoEditorImpl() {
   const [editorValue, setEditorValue] = useState(CODE_SAMPLES[lang] || "");
   
   const [rightPanelTab, setRightPanelTab] = useState("tutor");
+  const [isFunctionOnly, setIsFunctionOnly] = useState(true);
+  const [isGeneratingProgram, setIsGeneratingProgram] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("codeinsight-lang", lang);
@@ -455,7 +459,7 @@ export default function MonacoEditorImpl() {
     monacoRef.current = monaco;
 
     // Define custom dark theme
-    monaco.editor.defineTheme("codeinsight-dark", {
+    monaco.editor.defineTheme("traceiq-dark", {
       base: "vs-dark",
       inherit: true,
       rules: [
@@ -484,6 +488,38 @@ export default function MonacoEditorImpl() {
       const val = editor.getValue();
       setEditorValue(val);
     });
+  };
+
+  const handleGenerateCompleteProgram = async () => {
+    if (isGeneratingProgram) return;
+    setIsGeneratingProgram(true);
+    setConsoleLogs((prev) => [
+      ...prev,
+      `[AI] Requesting program completion from Gemini API...`,
+    ]);
+
+    try {
+      const response = await completeProgram(editorValue, lang, isFunctionOnly);
+      if (response.code) {
+        if (editorRef.current) {
+          editorRef.current.setValue(response.code);
+        } else {
+          setEditorValue(response.code);
+        }
+        setConsoleLogs((prev) => [
+          ...prev,
+          `[AI] Success: converted function to a complete program.`,
+        ]);
+        setIsFunctionOnly(false);
+      }
+    } catch (err) {
+      setConsoleLogs((prev) => [
+        ...prev,
+        `[AI] Failed to generate program: ${err.message || String(err)}`,
+      ]);
+    } finally {
+      setIsGeneratingProgram(false);
+    }
   };
 
   const handleClear = () => {
@@ -519,7 +555,7 @@ export default function MonacoEditorImpl() {
               ? "cpp"
               : "c";
       a.href = url;
-      a.download = `codeinsight_program.${ext}`;
+      a.download = `traceiq_program.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -617,13 +653,44 @@ export default function MonacoEditorImpl() {
     if (preserveStepIdx === -1) {
       clearTraces();
     }
-    setConsoleLogs([
+
+    let codeToRun = editorValue;
+
+    if (isFunctionOnly) {
+      setConsoleLogs([
+        `[AI] Automatically completing standalone function before execution...`,
+      ]);
+      try {
+        const response = await completeProgram(editorValue, lang, true);
+        if (response.code) {
+          codeToRun = response.code;
+          if (editorRef.current) {
+            editorRef.current.setValue(response.code);
+          }
+          setEditorValue(response.code);
+          setIsFunctionOnly(false);
+          setConsoleLogs((prev) => [
+            ...prev,
+            `[AI] Success: program completed successfully.`,
+          ]);
+        }
+      } catch (err) {
+        setConsoleLogs((prev) => [
+          ...prev,
+          `[AI] Failed to complete program automatically: ${err.message || String(err)}`,
+          `[AI] Attempting execution with original code...`,
+        ]);
+      }
+    }
+
+    setConsoleLogs((prev) => [
+      ...prev,
       `[Execution] Preparing compilation symbols...`,
       `[Execution] Requesting step trace from execution engine...`,
     ]);
 
     try {
-      const result = await generateTrace(editorValue, lang, stdinInput);
+      const result = await generateTrace(codeToRun, lang, stdinInput);
       setTraces(result);
       if (preserveStepIdx !== -1) {
         setCurrentStepIdx(preserveStepIdx);
@@ -722,7 +789,7 @@ export default function MonacoEditorImpl() {
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#22C55E] animate-pulse" />
             <span className="text-caption font-bold tracking-wider text-[var(--color-text-primary)] font-mono uppercase">
-              CodeInsight AI
+              TraceIQ AI
             </span>
           </div>
 
@@ -738,6 +805,30 @@ export default function MonacoEditorImpl() {
             <option value="c">C</option>
             <option value="cpp">C++</option>
           </select>
+
+          <div className="h-4 w-px bg-[var(--color-border)]" />
+
+          <label className="flex items-center gap-1.5 text-micro font-semibold text-[var(--color-text-secondary)] cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isFunctionOnly}
+              onChange={(e) => setIsFunctionOnly(e.target.checked)}
+              className="rounded border-[var(--color-border)] bg-[var(--color-surface-elevated)] accent-[#22C55E] h-3.5 w-3.5 cursor-pointer"
+            />
+            <span>Function Only</span>
+          </label>
+
+          <button
+            onClick={handleGenerateCompleteProgram}
+            disabled={isGeneratingProgram || isRunning}
+            className="flex h-8 items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-2.5 text-micro font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-50 cursor-pointer transition-colors"
+            title="AI: convert standalone function into complete executable program"
+          >
+            <Sparkles className={`h-3.5 w-3.5 text-emerald-400 ${isGeneratingProgram ? "animate-pulse" : ""}`} />
+            <span>{isGeneratingProgram ? "Generating..." : "Generate Program"}</span>
+          </button>
+
+          <div className="h-4 w-px bg-[var(--color-border)]" />
 
           <button
             onClick={handleRunRequest}
@@ -840,7 +931,7 @@ export default function MonacoEditorImpl() {
             <Editor
               height="100%"
               language={lang}
-              theme={theme === "light" ? "light" : "codeinsight-dark"}
+              theme={theme === "light" ? "light" : "traceiq-dark"}
               value={editorValue}
               options={editorOptions}
               onMount={handleEditorDidMount}

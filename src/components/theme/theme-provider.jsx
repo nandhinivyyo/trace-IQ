@@ -8,7 +8,7 @@ function getInitialTheme() {
   if (typeof window === "undefined") return "dark";
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "dark" || stored === "light") return stored;
-  // CodeInsight AI ships dark-first — it's built for a code-review
+  // TraceIQ AI ships dark-first — it's built for a code-review
   // context where a bright canvas fights the syntax highlighting.
   return "dark";
 }

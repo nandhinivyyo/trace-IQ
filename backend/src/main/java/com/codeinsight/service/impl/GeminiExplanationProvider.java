@@ -23,6 +23,9 @@ public class GeminiExplanationProvider implements AiExplanationProvider {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             apiKey = System.getProperty("GEMINI_API_KEY");
         }
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new RuntimeException("GEMINI_API_KEY is not configured");
+        }
 
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             try {

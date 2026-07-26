@@ -55,7 +55,24 @@ public class JavaTraceGenerator implements TraceGenerator {
             boolean compileCompleted = compileProcess.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
             
             if (!compileCompleted || compileProcess.exitValue() != 0) {
-                return createErrorTrace("Compilation failed. Debug information generation (-g) could not complete.", code);
+                StringBuilder compileErr = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getErrorStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        compileErr.append(line).append("\n");
+                    }
+                } catch (IOException ignored) {}
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        compileErr.append(line).append("\n");
+                    }
+                } catch (IOException ignored) {}
+                String errorMsg = compileErr.toString().trim();
+                if (errorMsg.isEmpty()) {
+                    errorMsg = "Compilation failed or timed out (exit code: " + (compileCompleted ? compileProcess.exitValue() : "timeout") + ").";
+                }
+                return createErrorTrace("Compilation Error:\n" + errorMsg, code);
             }
 
             // 2. Locate an available port for JDWP socket attachment
@@ -246,6 +263,157 @@ public class JavaTraceGenerator implements TraceGenerator {
         sr.enable();
     }
 
+    private String formatJdiValue(Value val) {
+        if (val == null) return "null";
+        if (val instanceof StringReference) {
+            return "\"" + ((StringReference) val).value() + "\"";
+        }
+        if (val instanceof ArrayReference) {
+            ArrayReference arr = (ArrayReference) val;
+            StringBuilder sb = new StringBuilder("[");
+            List<Value> vals = arr.getValues();
+            for (int i = 0; i < vals.size(); i++) {
+                sb.append(formatJdiValue(vals.get(i)));
+                if (i < vals.size() - 1) sb.append(", ");
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        if (val instanceof ObjectReference) {
+            ObjectReference obj = (ObjectReference) val;
+            ReferenceType type = obj.referenceType();
+            Field valField = type.fieldByName("value");
+            if (valField != null) {
+                Value innerVal = obj.getValue(valField);
+                if (innerVal != null) {
+                    if (innerVal instanceof CharValue) {
+                        return "\"" + ((CharValue) innerVal).value() + "\"";
+                    }
+                    if (innerVal instanceof StringReference) {
+                        return "\"" + ((StringReference) innerVal).value() + "\"";
+                    }
+                    return innerVal.toString();
+                }
+            }
+            return "\"" + obj.toString() + "\"";
+        }
+        if (val instanceof CharValue) {
+            return "\"" + ((CharValue) val).value() + "\"";
+        }
+        return val.toString();
+    }
+
+    private String trySerializeCollection(ObjectReference objRef) {
+        ReferenceType refType = objRef.referenceType();
+        String typeName = refType.name();
+        if (typeName.equals("java.util.Stack") || typeName.equals("java.util.Vector") || typeName.endsWith(".Stack") || typeName.endsWith(".Vector")) {
+            Field elementDataField = refType.fieldByName("elementData");
+            Field elementCountField = refType.fieldByName("elementCount");
+            if (elementDataField != null && elementCountField != null) {
+                Value elementDataVal = objRef.getValue(elementDataField);
+                Value elementCountVal = objRef.getValue(elementCountField);
+                if (elementDataVal instanceof ArrayReference && elementCountVal instanceof IntegerValue) {
+                    ArrayReference arrRef = (ArrayReference) elementDataVal;
+                    int count = ((IntegerValue) elementCountVal).value();
+                    List<Value> elements = arrRef.getValues(0, count);
+                    List<String> formatted = new ArrayList<>();
+                    for (int k = 0; k < elements.size(); k++) {
+                        Value elem = elements.get(k);
+                        formatted.add(elem != null ? formatJdiValue(elem) : "null");
+                    }
+                    return "[" + String.join(", ", formatted) + "]";
+                }
+            }
+        }
+        if (typeName.equals("java.util.ArrayList") || typeName.endsWith(".ArrayList")) {
+            Field elementDataField = refType.fieldByName("elementData");
+            Field sizeField = refType.fieldByName("size");
+            if (elementDataField != null && sizeField != null) {
+                Value elementDataVal = objRef.getValue(elementDataField);
+                Value sizeVal = objRef.getValue(sizeField);
+                if (elementDataVal instanceof ArrayReference && sizeVal instanceof IntegerValue) {
+                    ArrayReference arrRef = (ArrayReference) elementDataVal;
+                    int count = ((IntegerValue) sizeVal).value();
+                    List<Value> elements = arrRef.getValues(0, count);
+                    List<String> formatted = new ArrayList<>();
+                    for (int k = 0; k < elements.size(); k++) {
+                        Value elem = elements.get(k);
+                        formatted.add(elem != null ? formatJdiValue(elem) : "null");
+                    }
+                    return "[" + String.join(", ", formatted) + "]";
+                }
+            }
+        }
+        if (typeName.equals("java.util.LinkedList") || typeName.endsWith(".LinkedList")) {
+            Field sizeField = refType.fieldByName("size");
+            Field firstField = refType.fieldByName("first");
+            if (sizeField != null && firstField != null) {
+                Value sizeVal = objRef.getValue(sizeField);
+                Value firstVal = objRef.getValue(firstField);
+                if (sizeVal instanceof IntegerValue) {
+                    int count = ((IntegerValue) sizeVal).value();
+                    List<String> formatted = new ArrayList<>();
+                    Value currNode = firstVal;
+                    for (int k = 0; k < count; k++) {
+                        if (currNode instanceof ObjectReference) {
+                            ObjectReference nodeObj = (ObjectReference) currNode;
+                            ReferenceType nodeType = nodeObj.referenceType();
+                            Field itemField = nodeType.fieldByName("item");
+                            Field nextField = nodeType.fieldByName("next");
+                            if (itemField != null && nextField != null) {
+                                Value itemVal = nodeObj.getValue(itemField);
+                                formatted.add(itemVal != null ? formatJdiValue(itemVal) : "null");
+                                currNode = nodeObj.getValue(nextField);
+                            } else {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    return "[" + String.join(", ", formatted) + "]";
+                }
+            }
+        }
+        return null;
+    }
+
+    private String trySerializeCustomObject(ObjectReference objRef) {
+        ReferenceType refType = objRef.referenceType();
+        String typeName = refType.name();
+        
+        // Skip JDK standard classes
+        if (typeName.startsWith("java.") || typeName.startsWith("javax.") || typeName.startsWith("sun.") || typeName.startsWith("jdk.")) {
+            return null;
+        }
+        
+        try {
+            List<Field> fields = refType.allFields();
+            List<String> entries = new ArrayList<>();
+            for (Field f : fields) {
+                if (f.isStatic()) continue;
+                try {
+                    Value val = objRef.getValue(f);
+                    String valStr = "null";
+                    if (val != null) {
+                        if (val instanceof ObjectReference) {
+                            valStr = "\"0x" + Long.toHexString(((ObjectReference) val).uniqueID()) + "\"";
+                        } else if (val instanceof CharValue) {
+                            valStr = "\"" + ((CharValue) val).value() + "\"";
+                        } else if (val instanceof BooleanValue) {
+                            valStr = String.valueOf(((BooleanValue) val).value());
+                        } else {
+                            valStr = val.toString();
+                        }
+                    }
+                    entries.add("\"" + f.name() + "\": " + valStr);
+                } catch (Exception ignored) {}
+            }
+            return "{" + String.join(", ", entries) + "}";
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     private ExecutionTrace recordJavaStep(int stepNum, StepEvent event, String code, String consoleOutput) {
         ExecutionTrace trace = new ExecutionTrace();
         trace.setStepNumber(stepNum);
@@ -289,13 +457,25 @@ public class JavaTraceGenerator implements TraceGenerator {
                             StringBuilder sb = new StringBuilder("[");
                             for (int k = 0; k < elements.size(); k++) {
                                 Value elem = elements.get(k);
-                                sb.append(elem != null ? elem.toString() : "null");
+                                sb.append(elem != null ? formatJdiValue(elem) : "null");
                                 if (k < elements.size() - 1) {
                                     sb.append(", ");
                                 }
                             }
                             sb.append("]");
                             valStr = sb.toString();
+                        } else if (val instanceof ObjectReference) {
+                            String colStr = trySerializeCollection((ObjectReference) val);
+                            if (colStr != null) {
+                                valStr = colStr;
+                            } else {
+                                String customStr = trySerializeCustomObject((ObjectReference) val);
+                                if (customStr != null) {
+                                    valStr = customStr;
+                                } else {
+                                    valStr = val.toString();
+                                }
+                            }
                         } else {
                             valStr = val.toString();
                         }

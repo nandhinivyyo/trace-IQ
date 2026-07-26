@@ -48,7 +48,7 @@ export function ThemeSelector({ value, onChange }) {
         onChange={(e) => onChange(e.target.value)}
         className="h-8 appearance-none rounded-[var(--radius-sm)] border border-[#232323] bg-[#161616] pl-2.5 pr-8 text-caption font-semibold text-[var(--color-text-primary)] hover:border-[#35363c] focus:outline-none cursor-pointer"
       >
-        <option value="codeinsight-dark">CodeInsight Dark</option>
+        <option value="traceiq-dark">TraceIQ Dark</option>
         <option value="vs-dark">VS Dark</option>
         <option value="light">VS Light</option>
       </select>

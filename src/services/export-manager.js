@@ -7,7 +7,7 @@ export function exportTraceJson(traces) {
   downloadAnchor.setAttribute("href", dataStr);
   downloadAnchor.setAttribute(
     "download",
-    `codeinsight-trace-${Date.now()}.json`,
+    `traceiq-trace-${Date.now()}.json`,
   );
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
@@ -23,7 +23,7 @@ export function exportSessionJson(session) {
   downloadAnchor.setAttribute("href", dataStr);
   downloadAnchor.setAttribute(
     "download",
-    `codeinsight-session-${session.id || Date.now()}.json`,
+    `traceiq-session-${session.id || Date.now()}.json`,
   );
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
@@ -65,7 +65,7 @@ export function exportSvgFrame() {
     const svgUrl = URL.createObjectURL(svgBlob);
     const downloadAnchor = document.createElement("a");
     downloadAnchor.href = svgUrl;
-    downloadAnchor.download = `codeinsight-visualization-${Date.now()}.svg`;
+    downloadAnchor.download = `traceiq-visualization-${Date.now()}.svg`;
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
@@ -159,7 +159,7 @@ export function printExecutionReport(
     <!DOCTYPE html>
     <html>
     <head>
-      <title>CodeInsight AI - Program Execution Report</title>
+      <title>TraceIQ AI - Program Execution Report</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -288,7 +288,7 @@ export function printExecutionReport(
     </head>
     <body>
       <div class="header">
-        <div class="logo">CodeInsight<span>AI</span></div>
+        <div class="logo">TraceIQ<span>AI</span></div>
         <div style="text-align: right;">
           <div style="font-weight: bold;">Execution Trace Report</div>
           <div style="font-size: 11px; color: #666;">Generated: ${dateStr}</div>

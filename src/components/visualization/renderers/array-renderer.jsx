@@ -64,7 +64,7 @@ export const ArrayRenderer = {
           v.datatype.includes("[]") ||
           v.name === "arr" ||
           v.name === "nums" ||
-          (v.value.trim().startsWith("[") && v.value.trim().endsWith("]"))
+          (v.value && v.value.trim().startsWith("[") && v.value.trim().endsWith("]"))
         ),
     );
   },
@@ -91,7 +91,7 @@ export function ArrayHeader({ step, activeVariable, onSelectVariable }) {
           v.datatype.toLowerCase().includes("list") ||
           v.datatype.toLowerCase().includes("array") ||
           v.datatype.includes("[]") ||
-          (v.value.trim().startsWith("[") && v.value.trim().endsWith("]"))
+          (v.value && v.value.trim().startsWith("[") && v.value.trim().endsWith("]"))
         ),
     );
   }, [step.variablesAfter]);

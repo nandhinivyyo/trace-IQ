@@ -5,7 +5,7 @@
 @import "@fontsource/inter/700.css";
 
 /* ============================================================
-   CodeInsight AI — Design System
+   TraceIQ AI — Design System
    A premium, IDE-grade dark theme. Inspired by the restraint of
    Linear, the depth of Arc, the density control of n8n, and the
    material precision of Apple + Raycast. One accent, used sparingly.
@@ -85,7 +85,7 @@
 
 /* ---------------------------------------------------------------
    Light theme override
-   CodeInsight AI is designed dark-first; light mode is offered for
+   TraceIQ AI is designed dark-first; light mode is offered for
    accessibility/preference but keeps the same restrained, IDE tone.
 --------------------------------------------------------------- */
 .light {
@@ -250,3 +250,15 @@
   background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2334D399'><path d='M8 5v14l11-7z'/></svg>") no-repeat center center !important;
   background-size: 14px 14px !important;
 }
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.animate-dash {
+  stroke-dasharray: 6 6;
+  animation: dash 1s linear infinite;
+}
+

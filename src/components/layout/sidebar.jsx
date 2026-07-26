@@ -53,7 +53,7 @@ export function Sidebar({
           </div>
           {!collapsed && (
             <span className="text-body-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
-              CodeInsight{" "}
+              TraceIQ{" "}
               <span className="text-[var(--color-accent-text)]">AI</span>
             </span>
           )}

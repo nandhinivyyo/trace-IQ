@@ -99,6 +99,26 @@ export async function generateTrace(code, language, input) {
 }
 
 /**
+ * Requests AI program completion from the Spring Boot backend.
+ */
+export async function completeProgram(code, language, isFunction) {
+  const response = await fetch(`${API_BASE}/debugger/complete-program`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ code, language, isFunction, provider: "GEMINI" }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`AI Completion API error: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+
+/**
  * Parses user input statements and their expected data types.
  */
 export function parseInputRequirements(code, language) {

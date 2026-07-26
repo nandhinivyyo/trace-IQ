@@ -21,12 +21,14 @@ public class GeminiTutorProvider implements AiTutorProvider {
     }
 
     @Override
-    public TutorResponse consultTutor(TutorRequest request) {
-        String apiKey = System.getenv("GEMINI_API_KEY");
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            apiKey = System.getProperty("GEMINI_API_KEY");
-        }
-
+public TutorResponse consultTutor(TutorRequest request) {
+    String apiKey = System.getenv("GEMINI_API_KEY");
+    if (apiKey == null || apiKey.trim().isEmpty()) {
+        apiKey = System.getProperty("GEMINI_API_KEY");
+    }
+    if (apiKey == null || apiKey.trim().isEmpty()) {
+        throw new RuntimeException("GEMINI_API_KEY is not configured");
+    }
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             try {
                 java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();

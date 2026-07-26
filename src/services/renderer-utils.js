@@ -113,6 +113,10 @@ export function parseArrayValue(valStr) {
       .replace(/\bNone\b/g, "null");
     // Replace single quotes with double quotes
     cleaned = cleaned.replace(/'/g, '"');
+
+    // Remove trailing commas to prevent JSON.parse syntax errors
+    cleaned = cleaned.replace(/,\s*\]/g, ']').replace(/,\s*\}/g, '}');
+
     // Attempt standard JSON parse
     const parsed = JSON.parse(cleaned);
     if (Array.isArray(parsed)) {

@@ -17,7 +17,7 @@ export const navGroups = [
         label: "Dashboard",
         path: "/",
         icon: LayoutDashboard,
-        description: "An overview of your activity across CodeInsight AI.",
+        description: "An overview of your activity across TraceIQ AI.",
       },
       {
         label: "Code Visualizer",

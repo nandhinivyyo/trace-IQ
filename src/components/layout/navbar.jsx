@@ -64,7 +64,7 @@ export function Navbar({ collapsed, onToggleSidebar, onOpenMobileSidebar }) {
       {/* Breadcrumb */}
       <div className="flex min-w-0 items-center gap-1.5 text-body-sm">
         <span className="text-[var(--color-text-tertiary)]">
-          CodeInsight AI
+          TraceIQ AI
         </span>
         {current && (
           <>
@@ -142,7 +142,7 @@ export function Navbar({ collapsed, onToggleSidebar, onOpenMobileSidebar }) {
                 Arjun Rao
               </span>
               <span className="text-caption font-normal text-[var(--color-text-tertiary)]">
-                arjun@codeinsight.ai
+                arjun@traceiq.ai
               </span>
             </div>
           </DropdownMenuLabel>

@@ -7,6 +7,7 @@ import {
   Sparkles,
   Settings,
   UserRound,
+  Brain,
 } from "lucide-react";
 
 export const navGroups = [
@@ -26,11 +27,10 @@ export const navGroups = [
         description: "Step through code execution as an interactive graph.",
       },
       {
-        label: "DSA Visualizer",
-        path: "/dsa-visualizer",
-        icon: Workflow,
-        description:
-          "Watch data structures and algorithms run, frame by frame.",
+        label: "🧠 DSA Tutor",
+        path: "/dsa-tutor",
+        icon: Brain,
+        description: "An interactive, AI-powered DSA learning companion.",
       },
     ],
   },
